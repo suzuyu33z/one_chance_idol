@@ -11,6 +11,7 @@ import pandas as pd
 from db_control.connect import engine
 #from db_control.mymodels import Customers
 from db_control.mymodels import User, Dog, Breed, Walk, Location, Request, Message, Feedback, RequestedFeedback, RequestingFeedback, WalkDogList
+from datetime import datetime
 
 #user登録するためのもの
 def register_user(mymodel, values):
@@ -145,6 +146,56 @@ def get_walk_by_id(walk_id):
     
     finally:
         session.close()
+
+#home画面で自分の予定を表示するためのもの
+def get_all_walks_by_requests():
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        # 現在の日時を取得
+        current_time = datetime.now()
+
+        # Requestテーブルからconfirmedが1かつ未来の日時のwalk_idを取得
+        requests = session.query(Request).filter(Request.confirmed == True).all()
+        
+        walk_data = []
+        for request in requests:
+            # Walkテーブルのtime_startが現在よりも未来のものを取得
+            walk = session.query(Walk).filter(Walk.walk_id == request.walk_id, Walk.time_start > current_time).first()
+
+            if walk:
+                dogs = []
+                for walk_dog in walk.dogs:
+                    dog = walk_dog.dog
+                    breed = dog.breed
+                    dogs.append({
+                        "name": dog.dog_name,
+                        "breed": breed.breed_name,
+                        "age": dog.dog_age,
+                        "gender": dog.dog_sex
+                    })
+                
+                location = walk.location
+
+                walk_data.append({
+                    "walk_id": walk.walk_id,
+                    "date": walk.time_start.strftime("%Y/%m/%d"),
+                    "time_start": walk.time_start.strftime("%H:%M"),
+                    "time_end": walk.time_end.strftime("%H:%M"),
+                    "location": location.location_name,
+                    "dogs": dogs
+                })
+        
+        return walk_data
+
+    except Exception as e:
+        print(f"Error fetching walks by requests: {e}")
+        return []
+    
+    finally:
+        session.close()
+
 
 
 #これより下は、サンプルコードのもの

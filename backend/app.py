@@ -73,6 +73,13 @@ def get_walk_detail(walk_id):
     else:
         return jsonify({"error": "Walk not found"}), 404
 
+#home画面で自分の予定を取得するためのもの
+@app.route("/api/all_user_walks", methods=["GET"])
+def get_all_user_walks():
+    walk_data = crud.get_all_walks_by_requests()
+    return jsonify(walk_data)
+
+
 
 @app.route("/customers", methods=['POST'])
 def create_customer():

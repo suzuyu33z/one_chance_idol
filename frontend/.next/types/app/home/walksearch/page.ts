@@ -1,4 +1,4 @@
-// File: /Users/suzukiyuya/Documents/tech0/step3-2/wan_on_wan/frontend/src/app/home/walksearch/page.jsx
+// File: /Users/suzukiyuya/Documents/tech0/step3-2/one_chance_idol/frontend/src/app/home/walksearch/page.jsx
 import * as entry from '../../../../../src/app/home/walksearch/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

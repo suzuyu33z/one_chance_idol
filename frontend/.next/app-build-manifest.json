@@ -1,10 +1,5 @@
 {
   "pages": {
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -16,20 +11,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/home/page.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/home/walksearch/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/home/walksearch/page.js"
     ],
-    "/home/walksearch/detail/[id]/page": [
+    "/home/edition/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/walksearch/detail/[id]/page.js"
+      "static/chunks/app/home/edition/page.js"
     ],
-    "/home/myschedule/page": [
+    "/home/walkregi/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/home/myschedule/page.js"
+      "static/chunks/app/home/walkregi/page.js"
+    ],
+    "/home/history/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/home/history/page.js"
     ]
   }
 }

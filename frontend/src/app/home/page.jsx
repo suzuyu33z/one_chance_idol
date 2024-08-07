@@ -1,60 +1,59 @@
-import React from "react";
+"use client";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import WalkInfoCard from "../components/walk_info_card";
 
-export default function HomePage() {
+export default function UserWalkListPage() {
+  const [walks, setWalks] = useState([]);
+
+  // Flask APIからデータを取得
+  useEffect(() => {
+    fetch(`${process.env.API_ENDPOINT}/api/all_user_walks`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => setWalks(data))
+      .catch((error) => console.error("Error fetching user walks:", error));
+  }, []);
+
   return (
-    <div className="min-h-screen flex flex-col items-center bg-white">
+    <div className="flex flex-col min-h-screen bg-white">
       {/* ヘッダー */}
       <header className="w-full bg-green-100 py-4 text-center text-green-700 font-bold text-lg">
         わん-Chance-アイドル
       </header>
 
       {/* メインコンテンツ */}
-      <main className="flex-1 w-full flex flex-col justify-start items-center px-4 pt-4 pb-8 space-y-8">
-        {/* 上部の画像 */}
-        <div className="w-full flex justify-center mb-4">
-          <img
-            src="/images/dog_image.jpeg"
-            alt="Dog"
-            className="w-full h-auto rounded-md shadow-md"
-          />
-        </div>
+      <main className="flex-1 overflow-y-auto w-full">
+        <div className="flex flex-col items-center px-4 pt-4 pb-8">
+          {/* タイトル */}
+          <h2 className="text-lg font-bold mb-4">わんちゃんに会う予定</h2>
 
-        {/* 2カラムのボタン */}
-        <div className="grid grid-cols-2 gap-4 w-full">
-          <Link
-            href="/home/walksearch"
-            className="block bg-green-200 text-green-700 py-10 rounded-md font-semibold text-center hover:bg-green-300 transition-colors"
-          >
-            わんちゃんを探す
-          </Link>
-          <Link
-            href="/home/myschedule"
-            className="block bg-green-200 text-green-700 py-10 rounded-md font-semibold text-center hover:bg-green-300 transition-colors"
-          >
-            予定を確認する
-          </Link>
-          <Link
-            href="/home/history"
-            className="block bg-green-200 text-green-700 py-10 rounded-md font-semibold text-center hover:bg-green-300 transition-colors"
-          >
-            履歴を見る
-          </Link>
-          <Link
-            href="/home/editio"
-            className="block bg-green-200 text-green-700 py-10 rounded-md font-semibold text-center hover:bg-green-300 transition-colors"
-          >
-            プロフィール
-          </Link>
+          {/* WalkInfoCardを表示 */}
+          {walks.length > 0 ? (
+            walks.map((walk, index) => (
+              <WalkInfoCard
+                key={index}
+                date={walk.date}
+                time={`${walk.time_start}〜${walk.time_end}`} // 時間を表示
+                location={walk.location}
+                dogs={walk.dogs}
+                walkId={walk.walk_id}
+              />
+            ))
+          ) : (
+            <p className="text-gray-500">該当する結果が見つかりません。</p>
+          )}
         </div>
       </main>
-
-      {/* フッター */}
-      <footer className="w-full bg-green-100 py-4 text-center text-green-700">
-        <Link href="/logout" className="underline text-sm">
-          ログアウト
-        </Link>
-      </footer>
     </div>
   );
 }
