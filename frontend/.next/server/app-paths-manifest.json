@@ -1,0 +1,7 @@
+{
+  "/home/page": "app/home/page.js",
+  "/home/myschedule/page": "app/home/myschedule/page.js",
+  "/home/walksearch/detail/[id]/page": "app/home/walksearch/detail/[id]/page.js",
+  "/home/walksearch/page": "app/home/walksearch/page.js",
+  "/page": "app/page.js"
+}
