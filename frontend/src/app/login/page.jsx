@@ -18,6 +18,7 @@ export default function Login() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }), // フォームデータをJSONに変換して送信
+      credentials: "include", // <-- これが重要
     });
 
     if (response.ok) {

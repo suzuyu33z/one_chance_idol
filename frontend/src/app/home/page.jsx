@@ -2,17 +2,29 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import WalkInfoCard from "../components/walk_info_card";
+import { useRouter } from "next/navigation"; // useRouterをインポート
+import { checkAuth } from "../utils/auth"; // checkAuth 関数をインポート
 
 export default function UserWalkListPage() {
   const [walks, setWalks] = useState([]);
+  const router = useRouter(); // useRouterを初期化
 
-  // Flask APIからデータを取得
   useEffect(() => {
+    // ログイン状態をチェック
+    checkAuth().then((data) => {
+      console.log("Auth check data:", data);
+      if (data.error) {
+        router.push("/login"); // ログインしていない場合はログインページにリダイレクト
+      }
+    });
+
+    // ログインしている場合のみデータを取得
     fetch(`${process.env.API_ENDPOINT}/api/all_user_walks`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include", // セッションを含める
     })
       .then((response) => {
         if (!response.ok) {
@@ -20,7 +32,10 @@ export default function UserWalkListPage() {
         }
         return response.json();
       })
-      .then((data) => setWalks(data))
+      .then((data) => {
+        console.log("Fetched walks data:", data); // 取得したデータを表示
+        setWalks(data);
+      })
       .catch((error) => console.error("Error fetching user walks:", error));
   }, []);
 

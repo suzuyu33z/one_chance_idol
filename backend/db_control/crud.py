@@ -196,6 +196,64 @@ def get_all_walks_by_requests():
     finally:
         session.close()
 
+#walkにmessageを表示する
+def get_messages_by_walk_id(walk_id):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    
+    try:
+        messages = session.query(Message).filter(Message.walk_id == walk_id).order_by(Message.timestamp).all()
+        message_data = []
+        for message in messages:
+            user = session.query(User).filter(User.user_id == message.sender_user_id).first()
+            message_data.append({
+                "message_id": message.message_id,
+                "sender_user_id": message.sender_user_id,
+                "sender_name": user.name,  # ユーザー名を追加
+                "message": message.message,
+                "timestamp": message.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            })
+        return message_data
+    
+    except Exception as e:
+        print(f"Error fetching messages for walk ID {walk_id}: {e}")
+        return []
+    
+    finally:
+        session.close()
+
+#walkにメッセージを追加するコード
+def add_message_to_walk(walk_id, sender_user_id, message_text):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        new_message = Message(
+            walk_id=walk_id,
+            sender_user_id=sender_user_id,
+            message=message_text
+        )
+        session.add(new_message)
+        session.commit()
+
+        # メッセージとユーザー情報を返す
+        result = {
+            "message_id": new_message.message_id,
+            "walk_id": walk_id,
+            "message": message_text,
+            "sender_user_id": sender_user_id,
+            "sender_name": session.query(User).filter(User.user_id == sender_user_id).first().name,
+            "timestamp": new_message.timestamp
+        }
+        return result
+
+    except Exception as e:
+        session.rollback()
+        print(f"Error adding message: {e}")
+        return None
+    
+    finally:
+        session.close()
 
 
 #これより下は、サンプルコードのもの

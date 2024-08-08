@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask import jsonify, session
 import json
 from flask_cors import CORS
-
+import datetime  # datetimeをインポート
 from db_control import crud, mymodels
 
 import requests
@@ -14,7 +14,18 @@ from db_control.connect import engine
 # REST APIでありCRUDを持っている
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-CORS(app)
+# セッションに関する設定
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=False,  # HTTPSを使用しない場合はFalse
+    SESSION_COOKIE_SAMESITE="None",  # クロスサイトでのクッキー送信を許可
+    SESSION_COOKIE_DOMAIN=None,  # 自動設定
+    PERMANENT_SESSION_LIFETIME=datetime.timedelta(minutes=30),
+    SESSION_TYPE='filesystem'
+)
+CORS(app, supports_credentials=True, origins=["http://127.0.0.1:3000"])
+
 
 @app.route("/")
 def index():
@@ -53,10 +64,29 @@ def login():
     with Session(engine) as db_session:
         user = db_session.query(mymodels.User).filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
-            session['user_id'] = user.user_id
-            return jsonify({'message': 'Logged in successfully'})
+            session['user_id'] = user.user_id  # セッションに user_id を保存
+            print("Session after login:", session)  # セッションデータをログに出力
+            return jsonify({'message': 'Logged in successfully'}), 200
         else:
             return jsonify({'error': 'Invalid credentials'}), 401
+
+
+# 認証状態をチェックするエンドポイント
+@app.route("/api/check-auth", methods=['GET'])
+def check_auth():
+    print("Session data:", session)  # セッションデータをログに出力
+    if 'user_id' in session:
+        return jsonify({'message': 'Authenticated', 'user_id': session['user_id']}), 200
+    else:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+
+#ログアウトするためのエンドポイント
+@app.route("/api/logout", methods=['POST'])
+def logout():
+    session.pop('user_id', None)
+    return jsonify({'message': 'Logged out successfully'}), 200
+
 
 #散歩情報取得のコード
 @app.route("/api/walks", methods=["GET"])
@@ -79,7 +109,27 @@ def get_all_user_walks():
     walk_data = crud.get_all_walks_by_requests()
     return jsonify(walk_data)
 
+#walkのmessageを表示する
+@app.route("/api/walks/<int:walk_id>/messages", methods=["GET"])
+def get_walk_messages(walk_id):
+    messages = crud.get_messages_by_walk_id(walk_id)
+    if messages:
+        return jsonify(messages), 200
+    else:
+        return jsonify({"error": "No messages found for this walk"}), 404
 
+# メッセージの投稿（新しいエンドポイント）
+@app.route("/api/walks/<int:walk_id>/messages", methods=["POST"])
+def post_walk_message(walk_id):
+    data = request.get_json()
+    if not data or "message" not in data or "sender_user_id" not in data:
+        return jsonify({"error": "Invalid data"}), 400
+
+    result = crud.add_message_to_walk(walk_id, data["sender_user_id"], data["message"])
+    if result:
+        return jsonify(result), 201
+    else:
+        return jsonify({"error": "Failed to add message"}), 500
 
 @app.route("/customers", methods=['POST'])
 def create_customer():
