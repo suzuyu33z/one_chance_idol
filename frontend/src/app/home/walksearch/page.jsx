@@ -2,28 +2,32 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import WalkInfoCard from "../../components/walk_info_card";
+import useAuth from "../../utils/useAuth"; // useAuthフックをインポート
 
 export default function WalkListPage() {
+  const isAuthenticated = useAuth(); // 認証状態を確認
   const [walks, setWalks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Flask APIからデータを取得
   useEffect(() => {
-    fetch(process.env.API_ENDPOINT + "/api/walks", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
+    if (isAuthenticated) {
+      // ログインしている場合のみデータを取得
+      fetch(process.env.API_ENDPOINT + "/api/walks", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       })
-      .then((data) => setWalks(data))
-      .catch((error) => console.error("Error fetching walks:", error));
-  }, []);
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => setWalks(data))
+        .catch((error) => console.error("Error fetching walks:", error));
+    }
+  }, [isAuthenticated]);
 
   // 検索ワードに基づいてデータをフィルタリング
   const filteredWalks = walks.filter((walk) => {

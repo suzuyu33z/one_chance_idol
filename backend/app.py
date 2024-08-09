@@ -4,7 +4,7 @@ import json
 from flask_cors import CORS
 import datetime  # datetimeをインポート
 from db_control import crud, mymodels
-
+from datetime import datetime, timedelta
 import requests
 
 from werkzeug.security import check_password_hash
@@ -21,10 +21,10 @@ app.config.update(
     SESSION_COOKIE_SECURE=False,  # HTTPSを使用しない場合はFalse
     SESSION_COOKIE_SAMESITE="None",  # クロスサイトでのクッキー送信を許可
     SESSION_COOKIE_DOMAIN=None,  # 自動設定
-    PERMANENT_SESSION_LIFETIME=datetime.timedelta(minutes=30),
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=30),  # ここでは datetime.timedelta ではなく timedelta を使用
     SESSION_TYPE='filesystem'
 )
-CORS(app, supports_credentials=True, origins=["http://127.0.0.1:3000"])
+CORS(app, supports_credentials=True, origins=["*"])
 
 
 @app.route("/")
@@ -130,6 +130,40 @@ def post_walk_message(walk_id):
         return jsonify(result), 201
     else:
         return jsonify({"error": "Failed to add message"}), 500
+
+#walkに対してrequestを行うコード
+@app.route("/api/request_walk", methods=["POST"])
+def request_walk():
+    data = request.get_json()
+    requesting_user_id = session.get('user_id')
+    
+    if not requesting_user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    walk_id = data.get("walk_id")
+    requested_time_str = data.get("requested_time")  # クライアントからの文字列を取得
+
+    try:
+        # requested_time_str のフォーマットを調整して datetime オブジェクトに変換
+        if len(requested_time_str) == 5:  # フォーマットが 'HH:MM' の場合
+            today = datetime.now().date()  # 今日の日付を取得
+            requested_time = datetime.combine(today, datetime.strptime(requested_time_str, '%H:%M').time())
+        else:
+            requested_time = datetime.strptime(requested_time_str, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        return jsonify({"error": "Invalid date format"}), 400
+
+    result = crud.create_walk_request(
+        walk_id=walk_id,
+        requesting_user_id=requesting_user_id,
+        requested_time=requested_time
+    )
+
+    if result:
+        return jsonify({"message": "Request created successfully"}), 201
+    else:
+        return jsonify({"error": "Failed to create request"}), 500
+
 
 @app.route("/customers", methods=['POST'])
 def create_customer():

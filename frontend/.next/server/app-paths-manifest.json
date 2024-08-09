@@ -1,7 +1,8 @@
 {
-  "/home/walksearch/page": "app/home/walksearch/page.js",
   "/login/page": "app/login/page.js",
-  "/home/walksearch/detail/[id]/page": "app/home/walksearch/detail/[id]/page.js",
   "/home/page": "app/home/page.js",
-  "/page": "app/page.js"
+  "/home/walksearch/page": "app/home/walksearch/page.js",
+  "/home/walksearch/detail/[id]/page": "app/home/walksearch/detail/[id]/page.js",
+  "/home/edition/page": "app/home/edition/page.js",
+  "/home/walksearch/detail/[id]/request/page": "app/home/walksearch/detail/[id]/request/page.js"
 }

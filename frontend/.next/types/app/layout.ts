@@ -1,4 +1,4 @@
-// File: /Users/suzukiyuya/Documents/tech0/step3-2/one_chance_idol/frontend/src/app/layout.jsx
+// File: /Users/suzukiyuya/Documents/tech0/step3-2/one_chance_idol(個人用)_ログイン情報で出しわけ/frontend/src/app/layout.jsx
 import * as entry from '../../../src/app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

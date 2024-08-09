@@ -255,6 +255,69 @@ def add_message_to_walk(walk_id, sender_user_id, message_text):
     finally:
         session.close()
 
+#walkに対してrequestを送信するコード
+def create_walk_request(walk_id, requesting_user_id, requested_time):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        walk = session.query(Walk).filter(Walk.walk_id == walk_id).first()
+        if not walk:
+            return False
+
+        # requestテーブルに挿入
+        new_request = Request(
+            walk_id=walk_id,
+            requested_user_id=walk.owner_user_id,
+            requesting_user_id=requesting_user_id,
+            requested_time=requested_time,  # ここで正しくdatetimeを使用
+            confirmed=False,  # 初期値はFalse
+            timestamp=datetime.now(),  # 現在時刻
+            points_paid=0  # 必要ならば適切に設定
+        )
+        session.add(new_request)
+        session.commit()  # 新しいリクエストをコミット
+
+        # requested_feedbackテーブルに挿入
+        new_requested_feedback = RequestedFeedback(
+            content="",
+            rating=0,
+            timestamp=datetime.now()  # フィードバックの作成日時
+        )
+        session.add(new_requested_feedback)
+        session.commit()  # フィードバックをコミットしてIDを取得
+
+        # requesting_feedbackテーブルに挿入
+        new_requesting_feedback = RequestingFeedback(
+            content="",
+            rating=0,
+            timestamp=datetime.now()  # フィードバックの作成日時
+        )
+        session.add(new_requesting_feedback)
+        session.commit()  # フィードバックをコミットしてIDを取得
+
+        # Feedbackテーブルに挿入
+        new_feedback = Feedback(
+            walk_id=walk_id,
+            requested_user_id=walk.owner_user_id,
+            requesting_user_id=requesting_user_id,
+            requested_feedback_id=new_requested_feedback.requested_feedback_id,
+            requesting_feedback_id=new_requesting_feedback.requesting_feedback_id
+        )
+        session.add(new_feedback)
+
+        session.commit()
+        return True
+
+    except Exception as e:
+        session.rollback()
+        print(f"Error creating request: {e}")
+        return False
+
+    finally:
+        session.close()
+
+
 
 #これより下は、サンプルコードのもの
 def myinsert(mymodel, values):

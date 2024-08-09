@@ -1,22 +1,37 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation"; // useParamsをインポート
+import { useParams, useRouter } from "next/navigation"; // useRouterをインポート
 import Link from "next/link";
+import useAuth from "../../../../utils/useAuth"; // useAuthをインポート
 
 export default function WalkDetailPage() {
+  const isAuthenticated = useAuth(); // 認証状態を確認
   const { id } = useParams(); // useParamsでidを取得
-
-  // idが未定義の場合は何も表示しない
-  if (!id) {
-    return <p>Loading...</p>;
-  }
+  const router = useRouter(); // useRouterを初期化
 
   const [walkDetail, setWalkDetail] = useState(null);
   const [messages, setMessages] = useState([]); // メッセージを格納するための状態を追加
   const [newMessage, setNewMessage] = useState(""); // 新しいメッセージの状態を追加
+  const [userId, setUserId] = useState(null); // ログインしているユーザーIDを保存
 
   useEffect(() => {
-    if (id) {
+    if (isAuthenticated && id) {
+      // ユーザー情報を取得
+      fetch(`${process.env.API_ENDPOINT}/api/check-auth`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.user_id) {
+            setUserId(data.user_id); // ユーザーIDを保存
+          }
+        })
+        .catch((error) => console.error("Error fetching user info:", error));
+
       // Flask APIから特定のwalk_idのデータを取得
       fetch(`${process.env.API_ENDPOINT}/api/walks/${id}`)
         .then((response) => response.json())
@@ -29,16 +44,16 @@ export default function WalkDetailPage() {
         .then((data) => setMessages(data))
         .catch((error) => console.error("Error fetching messages:", error));
     }
-  }, [id]);
+  }, [isAuthenticated, id]);
 
   // コメント送信ハンドラー
   const handleSendMessage = () => {
-    // コメントをサーバーに送信するロジックを追加します
-    if (newMessage.trim()) {
+    if (newMessage.trim() && userId) {
+      // ユーザーIDが取得できている場合のみ送信
       const messageData = {
         walk_id: id,
         message: newMessage,
-        sender_user_id: 1, // 仮のユーザーID。実際のログインユーザーのIDを使用してください。
+        sender_user_id: userId, // 取得したユーザーIDを使用
       };
 
       fetch(`${process.env.API_ENDPOINT}/api/walks/${id}/messages`, {
@@ -55,6 +70,11 @@ export default function WalkDetailPage() {
         })
         .catch((error) => console.error("Error sending message:", error));
     }
+  };
+
+  // "申請する"ボタンがクリックされたときのハンドラー
+  const handleRequest = () => {
+    router.push(`/home/walksearch/detail/${id}/request`); // 指定されたパスに遷移
   };
 
   if (!walkDetail) {
@@ -139,7 +159,10 @@ export default function WalkDetailPage() {
         <div className="flex justify-center mt-4">
           {" "}
           {/* ボタンの間に余白を設定 */}
-          <button className="bg-blue-500 text-white py-2 px-4 rounded">
+          <button
+            className="bg-blue-500 text-white py-2 px-4 rounded"
+            onClick={handleRequest} // "申請する"ボタンをクリックしたときに呼ばれる
+          >
             申請する
           </button>
         </div>
